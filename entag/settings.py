@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "customer",
     "admin_dashboard",
     "payments",
+    "website",
     # third party apps
     "rest_framework",
     "rest_framework.authtoken",
