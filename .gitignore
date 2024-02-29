@@ -1,3 +1,5 @@
 .env
-__pycache__/
-# docker-compose.yml
+*__pycache__/
+docker-compose.yml
+entag/__pycache__/settings.cpython-311.pyc
+entag/__pycache__/urls.cpython-311.pyc

@@ -29,4 +29,4 @@ RUN for i in 1 2 3; do pip install --upgrade pip && pip install --default-timeou
 COPY . /app/
 
 # Run the application
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "agify_project.wsgi:application"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "entag.wsgi:application"]

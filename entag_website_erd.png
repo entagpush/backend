@@ -1,0 +1,21 @@
+// Entag Website ERD
+digraph {
+	A [label=Blog]
+	B [label=Post]
+	C [label=Category]
+	D [label=Tag]
+	E [label=Comment]
+	F [label=Waitlist]
+	B -> C
+	B -> D
+	B -> E [label="1 to many"]
+	C -> B [label="1 to many"]
+	D -> B [label="many to many" dir=none]
+	F -> A [label="associated with" style=dotted]
+	A [label=Blog shape=component]
+	B [label=Post shape=component]
+	C [label=Category shape=component]
+	D [label=Tag shape=component]
+	E [label=Comment shape=component]
+	F [label=Waitlist shape=note]
+}
