@@ -37,3 +37,18 @@ class ArtistProfile(models.Model):
 
     def __str__(self):
         return self.profile.user.username
+
+
+class Message(models.Model):
+    sender = models.ForeignKey(
+        UserProfile, on_delete=models.CASCADE, related_name="sent_messages"
+    )
+    receiver = models.ForeignKey(
+        UserProfile, on_delete=models.CASCADE, related_name="received_messages"
+    )
+    message = models.TextField()
+    sent_at = models.DateTimeField(auto_now_add=True)
+    read = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Message from {self.sender} to {self.receiver}"
