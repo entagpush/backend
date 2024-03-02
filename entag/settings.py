@@ -11,11 +11,16 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+from django.utils.translation import gettext as _
+
 
 from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+PROJECT_ROOT = BASE_DIR / "entagstatic"
 
 
 # Quick-start development settings - unsuitable for production
@@ -72,6 +77,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
 ]
 
 ROOT_URLCONF = "entag.urls"
@@ -91,6 +97,7 @@ TEMPLATES = [
         },
     },
 ]
+
 
 WSGI_APPLICATION = "entag.wsgi.application"
 
@@ -143,6 +150,20 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
+USE_I18N = True
+
+from django.utils.translation import gettext_lazy as _
+
+LANGUAGES = [
+    ("en", _("English")),
+    ("fr", _("French")),
+    # Add more languages here
+]
+
+LOCALE_PATHS = [
+    os.path.join(BASE_DIR, "locale"),
+]
+
 TIME_ZONE = "UTC"
 
 USE_I18N = True
@@ -164,6 +185,8 @@ SWAGGER_SETTINGS = {
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = "/static/"
+STATIC_ROOT = PROJECT_ROOT / "staticfiles"
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
