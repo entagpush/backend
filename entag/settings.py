@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 from pathlib import Path
 import os
 from django.utils.translation import gettext as _
-
+from kombu.serialization import registry
 
 from decouple import config
 
@@ -180,6 +180,36 @@ SWAGGER_SETTINGS = {
     },
     "DOC_EXPANSION": "none",
 }
+
+DEFAULT_RENDERER_CLASSES = ("rest_framework.renderers.JSONRenderer",)
+
+if DEBUG:
+    DEFAULT_RENDERER_CLASSES = DEFAULT_RENDERER_CLASSES + (
+        "rest_framework.renderers.BrowsableAPIRenderer",
+    )
+
+REST_FRAMEWORK = {
+    "EXCEPTION_HANDLER": "core.exceptions.permission_exception_handler",
+    "DEFAULT_RENDERER_CLASSES": DEFAULT_RENDERER_CLASSES,
+    "COERCE_DECIMAL_TO_STRING": False,
+    "DEFAULT_PAGINATION_CLASS": "core.pagination.StandardResultSetPagination",
+}
+
+CELERY_ENABLED = config("CELERY_ENABLED", default=False, cast=bool)
+CELERY_BROKER_URL = config("CELERY_BROKER", "redis://localhost:6379/0")
+CELERY_RESULT_BACKEND = config("CELERY_BROKER", "redis://localhost:6379/0")
+
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_ACCEPT_CONTENT = ["json", "application/text", "application/json"]
+# http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-time-limit
+CELERY_TASK_TRACK_STARTED = True
+CELERY_ACKS_LATE = True
+
+
+registry.enable("json")
+registry.enable("application/text")
+registry.enable("application/json")
 
 
 # Static files (CSS, JavaScript, Images)
