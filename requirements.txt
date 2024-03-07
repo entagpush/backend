@@ -1,3 +1,4 @@
+amqp==5.2.0
 asgiref==3.7.2
 black==24.2.0
 cachetools==5.3.3
@@ -18,10 +19,11 @@ google-auth-httplib2==0.2.0
 google-auth-oauthlib==1.2.0
 googleapis-common-protos==1.62.0
 graphviz==0.20.1
+gunicorn==21.2.0
 httplib2==0.22.0
 idna==3.6
 inflection==0.5.1
-kombu==5.2.3; python_version >= '3.7'
+kombu==5.2.3
 mypy-extensions==1.0.0
 oauthlib==3.2.2
 packaging==23.2
@@ -44,3 +46,4 @@ secure==0.3.0
 sqlparse==0.4.4
 uritemplate==4.1.1
 urllib3==2.2.1
+vine==5.1.0
