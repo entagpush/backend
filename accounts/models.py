@@ -1,7 +1,7 @@
 from django.db import models
-from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.conf import settings
+from django.utils.crypto import get_random_string
 
 
 from core.models import TimestampedModel, storage_location
@@ -48,11 +48,11 @@ class User(AbstractUser):
 
     objects = UserManager()
 
-    USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["name"]
+    USERNAME_FIELD = "username"
+    # REQUIRED_FIELDS = ["email", "username"]
 
     def __str__(self):
-        return self.name
+        return self.username
 
 
 class UserProfile(TimestampedModel):
@@ -73,6 +73,24 @@ class UserProfile(TimestampedModel):
 
     def __str__(self):
         return self.user.username
+
+
+class AdminInvitation(models.Model):
+    email = models.EmailField()
+    code = models.CharField(max_length=20, unique=True, blank=True)
+    inviter = models.ForeignKey(
+        User, related_name="sent_invitations", on_delete=models.CASCADE
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    accepted = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+        if not self.code:
+            self.code = get_random_string(20)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"Invitation for {self.email} by {self.inviter.username} (Accepted: {'Yes' if self.accepted else 'No'})"
 
 
 class Genre(TimestampedModel):

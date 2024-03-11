@@ -3,8 +3,11 @@ from django.contrib.auth import get_user_model
 from rest_framework import status, viewsets, mixins
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework.permissions import IsAdminUser
 
-from .serializers import UserSerializer
+from accounts.models import AdminInvitation
+
+from .serializers import AdminInvitationSerializer, UserSerializer
 
 User = get_user_model()
 
@@ -25,3 +28,9 @@ class UserRegistrationViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
             },
             status=status.HTTP_201_CREATED,
         )
+
+
+class AdminInvitationViewSet(viewsets.ModelViewSet):
+    queryset = AdminInvitation.objects.all()
+    serializer_class = AdminInvitationSerializer
+    permission_classes = [IsAdminUser]
