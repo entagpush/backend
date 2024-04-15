@@ -1,4 +1,6 @@
-from django.db import models
+import uuid as uuid_lib
+
+from django.db import models, transaction
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.conf import settings
 from django.utils.crypto import get_random_string
@@ -7,20 +9,51 @@ from django.utils.crypto import get_random_string
 from core.models import TimestampedModel, storage_location
 
 
-User = settings.AUTH_USER_MODEL
+# User = settings.AUTH_USER_MODEL
 
+# class UserProfile(TimestampedModel):
+#     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
+#     first_name = models.CharField(max_length=100, default="")
+#     last_name = models.CharField(max_length=100, default="")
+
+#     # Additional fields
+#     is_artist = models.BooleanField(default=False)
+#     bio = models.TextField(blank=True)
+#     profile_picture = models.FileField(
+#         storage=storage_location,
+#         upload_to="user_profile_picture/",
+#         null=True,
+#         blank=True,
+#     )
+#     phone_number = models.CharField(max_length=20, blank=True)
+
+#     def __str__(self):
+#         return self.user.username
 
 class UserManager(BaseUserManager):
 
     use_in_migration = True
 
-    def create_user(self, email, password=None, **extra_fields):
+    def _create_user(self, email, password, **extra_fields):
         if not email:
-            raise ValueError("Email is Required")
-        user = self.model(email=self.normalize_email(email), **extra_fields)
+            raise ValueError("The given email must be set")
+        if not username:
+            raise ValueError('The given username must be set')
+        username = self.model.normalize_username(username)
+        user = self.model(username=username, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
+    
+    def _create_user_profile(self, user):
+        return UserProfile.objects.create(user=user)
+
+    def create_user(self, email, password=None, **extra_fields):
+        with transaction.atomic():
+            extra_fields.setdefault("is_superuser", False)
+            user = self._create_user(email, password, **extra_fields)
+            self._create_user_profile(user)
+            return user
 
     def create_superuser(self, email, password, **extra_fields):
         extra_fields.setdefault("is_staff", True)
@@ -36,7 +69,6 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractUser):
-
     username = models.CharField(max_length=100, unique=True)
     email = models.EmailField(max_length=100, unique=True)
     date_joined = models.DateTimeField(auto_now_add=True)
@@ -73,6 +105,28 @@ class UserProfile(TimestampedModel):
 
     def __str__(self):
         return self.user.username
+
+
+
+# class EmailAddress(models.Model):
+#     uuid = models.UUIDField(unique=True, default=uuid_lib.uuid4)
+#     user = models.ForeignKey(
+#         settings.AUTH_USER_MODEL,
+#         related_name="email_addresses",
+#         on_delete=models.CASCADE,
+#     )
+#     email = models.EmailField(unique=True)
+#     is_verified = models.BooleanField(default=False)
+#     is_primary = models.BooleanField(default=False)
+#     created_at = models.DateTimeField(auto_now_add=True)
+
+#     def __str__(self):
+#         return self.email
+
+#     def confirm(self):
+#         self.is_verified = True
+#         self.save(update_fields=["is_verified"])
+#         self.user.save()
 
 
 class AdminInvitation(models.Model):
@@ -115,19 +169,19 @@ class ArtistProfile(TimestampedModel):
         return self.profile.user.username
 
 
-class Message(TimestampedModel):
-    sender = models.ForeignKey(
-        UserProfile, on_delete=models.CASCADE, related_name="sent_messages"
-    )
-    receiver = models.ForeignKey(
-        UserProfile, on_delete=models.CASCADE, related_name="received_messages"
-    )
-    image = models.FileField(
-        storage=storage_location, upload_to="message_images/", null=True, blank=True
-    )
-    message = models.TextField()
-    sent_at = models.DateTimeField(auto_now_add=True)
-    read = models.BooleanField(default=False)
+# class Message(TimestampedModel):
+#     sender = models.ForeignKey(
+#         UserProfile, on_delete=models.CASCADE, related_name="sent_messages"
+#     )
+#     receiver = models.ForeignKey(
+#         UserProfile, on_delete=models.CASCADE, related_name="received_messages"
+#     )
+#     image = models.FileField(
+#         storage=storage_location, upload_to="message_images/", null=True, blank=True
+#     )
+#     message = models.TextField()
+#     sent_at = models.DateTimeField(auto_now_add=True)
+#     read = models.BooleanField(default=False)
 
-    def __str__(self):
-        return f"Message from {self.sender} to {self.receiver}"
+#     def __str__(self):
+#         return f"Message from {self.sender} to {self.receiver}"

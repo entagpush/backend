@@ -31,7 +31,6 @@ class Blog(models.Model):
             return f"{self.title} (Anonymous)"
 
 
-
 class Waitlist(models.Model):
     name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
