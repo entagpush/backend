@@ -30,21 +30,25 @@ from core.models import TimestampedModel, storage_location
 #     def __str__(self):
 #         return self.user.username
 
+
 class UserManager(BaseUserManager):
 
     use_in_migration = True
 
-    def _create_user(self, email, password, **extra_fields):
+    def _create_user(self, email, password, username_data, **extra_fields):
         if not email:
             raise ValueError("The given email must be set")
-        if not username:
-            raise ValueError('The given username must be set')
-        username = self.model.normalize_username(username)
-        user = self.model(username=username, **extra_fields)
+        if not username_data:
+            raise ValueError("The given username must be set")
+
+        username_normalised = self.model.normalize_username(username_data)
+
+        user = self.model(username=username_normalised, email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
+
         return user
-    
+
     def _create_user_profile(self, user):
         return UserProfile.objects.create(user=user)
 
@@ -105,7 +109,6 @@ class UserProfile(TimestampedModel):
 
     def __str__(self):
         return self.user.username
-
 
 
 # class EmailAddress(models.Model):

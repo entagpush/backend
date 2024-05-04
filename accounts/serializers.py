@@ -46,7 +46,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        representation['user'] = UserDetailsSerializer(instance.user).data
+        representation["user"] = UserDetailsSerializer(instance.user).data
         return representation
 
 
@@ -62,10 +62,9 @@ class UserLoginSerializer(serializers.Serializer):
 
     def authenticate_user(self, request, **data):
         credentials = {
-            'username': data.get('username'),
-            'password': data.get('password')
+            "username": data.get("username"),
+            "password": data.get("password"),
         }
-        print(credentials)
 
         user = authenticate(request, **credentials)
         if not user:
@@ -74,8 +73,7 @@ class UserLoginSerializer(serializers.Serializer):
                     "detail": INVALID_CREDENTIALS_MSG,
                 }
             )
-        return user.first()
-
+        return user
 
     def save(self):
         request = self.context.get("request")
