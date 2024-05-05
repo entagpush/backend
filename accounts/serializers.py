@@ -15,7 +15,13 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "email", "username", "password", "is_admin"]
+        fields = [
+            "id",
+            "email",
+            "username",
+            "password",
+            "is_admin",
+        ]
 
         def create(self, validated_data):
             user = User.objects.create_user(**validated_data)
@@ -46,8 +52,25 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        representation["user"] = UserDetailsSerializer(instance.user).data
         return representation
+
+
+class UserProfileCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = [
+            "user",
+            "first_name",
+            "last_name",
+            "bio",
+            "phone_number",
+            "is_artist",
+        ]
+
+        read_only_fields = ("user",)
+
+    def to_representation(self, instance):
+        return UserProfileSerializer(instance=instance)
 
 
 class UserDetailsTokenSerializer(serializers.Serializer):

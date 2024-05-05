@@ -58,7 +58,7 @@ INSTALLED_APPS = [
     # third party apps
     "rest_framework",
     "rest_framework.authtoken",
-    'rest_framework_simplejwt.token_blacklist',
+    "rest_framework_simplejwt.token_blacklist",
     "drf_yasg",
     "corsheaders",
     "django_filters",
@@ -225,7 +225,7 @@ SIMPLE_JWT = {
 }
 
 WEB_TOKEN_EXPIRY = config("WEB_TOKEN_EXPIRY", cast=int)
-AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.ModelBackend']
+AUTHENTICATION_BACKENDS = ["django.contrib.auth.backends.ModelBackend"]
 
 CELERY_ENABLED = config("CELERY_ENABLED", default=False, cast=bool)
 CELERY_BROKER_URL = config("CELERY_BROKER", "redis://localhost:6379/0")
@@ -275,7 +275,11 @@ AWS_LOCATION = "static"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # CSRF_COOKIE_SECURE = True
-CSRF_TRUSTED_ORIGINS=['http://localhost:8000', 'https://waitlist-khaki.vercel.app/', 'https://backend-yxi1.onrender.com/swagger/']
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:8000",
+    "https://waitlist-khaki.vercel.app/",
+    "https://backend-yxi1.onrender.com/swagger/",
+]
 
 
 CORS_ALLOW_ALL_ORIGINS = True

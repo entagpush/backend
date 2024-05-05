@@ -21,9 +21,9 @@ class BlogSerializer(serializers.ModelSerializer):
         extra_kwargs = {"author": {"read_only": True, "required": False}}
 
     def create(self, validated_data):
-        request = self.context.get('request')
+        request = self.context.get("request")
         print(request, request.user)
-        if request and hasattr(request, 'user') and request.user.is_authenticated:
+        if request and hasattr(request, "user") and request.user.is_authenticated:
             if validated_data.get("is_anonymous") != True:
                 validated_data["author"] = request.user
         else:

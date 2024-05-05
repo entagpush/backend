@@ -3,24 +3,29 @@ from datetime import timedelta
 from django.contrib.auth import get_user_model
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
+from django.db import transaction
+from django.shortcuts import get_object_or_404
 
 
 from rest_framework import status, viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework.permissions import IsAdminUser, AllowAny
+from rest_framework.permissions import IsAdminUser, AllowAny, IsAuthenticated
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from drf_yasg.utils import swagger_auto_schema
 
-from accounts.models import AdminInvitation
+from accounts.models import AdminInvitation, UserProfile
 
 from .serializers import (
     AdminInvitationSerializer,
+    UserDetailsSerializer,
     UserDetailsTokenSerializer,
     UserLoginSerializer,
+    UserProfileCreateSerializer,
+    UserProfileSerializer,
     UserSerializer,
 )
 
@@ -58,28 +63,54 @@ class UserRegistrationViewSet(
         user = serializer.save()
 
         refresh = RefreshToken.for_user(user)  # Create a new token for the user
-        
-        return Response({
-            "user": UserSerializer(
+
+        return Response(
+            {
+                "user": UserSerializer(
                     user, context=self.get_serializer_context()
                 ).data,
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-        }, status=status.HTTP_201_CREATED)
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
+            },
+            status=status.HTTP_201_CREATED,
+        )
 
-
-    @csrf_exempt
     @action(methods=["post"], detail=False)
     @swagger_auto_schema(
         request_body=UserLoginSerializer, responses={200: UserDetailsTokenSerializer}
     )
     def login(self, request, *args, **kwargs):
-        serializer = UserLoginSerializer(data=request.data, context=self.get_serializer_context())
+        serializer = UserLoginSerializer(
+            data=request.data, context=self.get_serializer_context()
+        )
         serializer.is_valid(raise_exception=True)
 
         user = serializer.save()
         data = self.get_user_token_response_data(user)
         return Response(data)
+
+    @action(methods=["patch"], detail=False, permission_classes=[IsAuthenticated])
+    @swagger_auto_schema(
+        request_body=UserProfileCreateSerializer, responses={200: UserProfileSerializer}
+    )
+    @transaction.atomic
+    def update_user_profile(self, request, *args, **kwargs):
+        user_profile = self.get_user_profile(request.user)
+
+        # Update the existing user profile with the new data
+        serializer = UserProfileCreateSerializer(
+            instance=user_profile, data=request.data, partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(
+            data=UserProfileSerializer(instance=user_profile).data,
+            status=status.HTTP_200_OK,
+        )
+
+    def get_user_profile(self, user):
+        return get_object_or_404(UserProfile, user=user)
 
 
 class AdminInvitationViewSet(viewsets.ModelViewSet):
