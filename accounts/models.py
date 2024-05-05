@@ -91,6 +91,10 @@ class User(AbstractUser):
         return self.username
 
 
+class ArtistData(TimestampedModel):
+    genres = models.CharField(max_length=256)
+
+
 class UserProfile(TimestampedModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     first_name = models.CharField(max_length=100, default="")
@@ -106,6 +110,12 @@ class UserProfile(TimestampedModel):
         blank=True,
     )
     phone_number = models.CharField(max_length=20, blank=True)
+    genres = models.ForeignKey(
+        ArtistData,
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
 
     def __str__(self):
         return self.user.username

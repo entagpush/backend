@@ -79,6 +79,7 @@ class UserRegistrationViewSet(
     @swagger_auto_schema(
         request_body=UserLoginSerializer, responses={200: UserDetailsTokenSerializer}
     )
+    @csrf_exempt
     def login(self, request, *args, **kwargs):
         serializer = UserLoginSerializer(
             data=request.data, context=self.get_serializer_context()
