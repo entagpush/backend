@@ -26,7 +26,7 @@ from .serializers import (
     UserLoginSerializer,
     UserProfileCreateSerializer,
     UserProfileSerializer,
-    UserSerializer,
+    UserCreateSerializer,
 )
 
 User = get_user_model()
@@ -49,24 +49,27 @@ class UserTokenResponseMixin:
         return UserDetailsTokenSerializer(data, context={"request": self.request}).data
 
 
-class UserRegistrationViewSet(
-    viewsets.GenericViewSet, mixins.CreateModelMixin, UserTokenResponseMixin
-):
+class UserRegistrationViewSet(viewsets.GenericViewSet, UserTokenResponseMixin):
     queryset = User.objects.all()
-    serializer_class = UserSerializer
+    serializer_class = UserCreateSerializer
     permission_classes = [AllowAny]
 
     @csrf_exempt
-    def create(self, request, *args, **kwargs):
+    @action(methods=["post"], detail=False)
+    @swagger_auto_schema(
+        request_body=UserCreateSerializer,
+        responses={200: UserDetailsTokenSerializer},
+    )
+    def signup(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
-        refresh = RefreshToken.for_user(user)  # Create a new token for the user
+        refresh = RefreshToken.for_user(user)
 
         return Response(
             {
-                "user": UserSerializer(
+                "user": UserCreateSerializer(
                     user, context=self.get_serializer_context()
                 ).data,
                 "refresh": str(refresh),

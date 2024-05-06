@@ -1,5 +1,6 @@
 from django.utils import timezone
 from django.contrib.auth import authenticate
+from django.db import transaction
 
 from rest_framework import serializers
 
@@ -10,7 +11,7 @@ from accounts.services import send_admin_invitation_email
 INVALID_CREDENTIALS_MSG = "Unable to login with the provided credentials."
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserCreateSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
 
     class Meta:
@@ -23,9 +24,32 @@ class UserSerializer(serializers.ModelSerializer):
             "is_admin",
         ]
 
-        def create(self, validated_data):
-            user = User.objects.create_user(**validated_data)
-            return user
+    def create(self, validated_data):
+        password = validated_data.pop("password")
+        email = validated_data.pop("email")
+        username_data = validated_data.pop("username")
+
+        if not email:
+            raise serializers.ValidationError("The given email must be set")
+        if not username_data:
+            raise serializers.ValidationError("The given username must be set")
+
+        with transaction.atomic():
+            user = User(
+                username=User.normalize_username(username_data),
+                email=email,
+                **validated_data
+            )
+            user.set_password(password)
+            user.save()
+
+            self.create_user_profile(user)
+
+        return user
+
+    @staticmethod
+    def create_user_profile(user):
+        UserProfile.objects.create(user=user)
 
 
 class UserDetailsSerializer(serializers.ModelSerializer):

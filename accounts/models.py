@@ -35,29 +35,33 @@ class UserManager(BaseUserManager):
 
     use_in_migration = True
 
-    def _create_user(self, email, password, username_data, **extra_fields):
-        if not email:
-            raise ValueError("The given email must be set")
-        if not username_data:
-            raise ValueError("The given username must be set")
+    # def _create_user(self, email, password, username_data, **extra_fields):
+    #     if not email:
+    #         raise ValueError("The given email must be set")
+    #     if not username_data:
+    #         raise ValueError("The given username must be set")
 
-        username_normalised = self.model.normalize_username(username_data)
+    #     username_normalised = self.model.normalize_username(username_data)
 
-        user = self.model(username=username_normalised, email=email, **extra_fields)
-        user.set_password(password)
-        user.save(using=self._db)
+    #     user = self.model(username=username_normalised, email=email, **extra_fields)
+    #     user.save(using=self._db)
 
-        return user
+    #     user.set_password(password)
+    #     user.save(using=self._db)
 
-    def _create_user_profile(self, user):
-        return UserProfile.objects.create(user=user)
+    #     return user
 
-    def create_user(self, email, password=None, **extra_fields):
-        with transaction.atomic():
-            extra_fields.setdefault("is_superuser", False)
-            user = self._create_user(email, password, **extra_fields)
-            self._create_user_profile(user)
-            return user
+    # def _create_user_profile(self, user):
+    #     return UserProfile.objects.create(user=user)
+
+    # def create_user(self, email, password=None, **extra_fields):
+    #     with transaction.atomic():
+    #         extra_fields.setdefault("is_superuser", False)
+
+    #         user = self._create_user(email, password, **extra_fields)
+    #         print("I got here")
+    #         self._create_user_profile(user)
+    #         return user
 
     def create_superuser(self, email, password, **extra_fields):
         extra_fields.setdefault("is_staff", True)
