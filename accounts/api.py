@@ -43,13 +43,16 @@ class UserTokenResponseMixin:
         refresh_token = RefreshToken.for_user(user)
         access_token = refresh_token.access_token
         access_token.set_exp(lifetime=timedelta(minutes=settings.WEB_TOKEN_EXPIRY))
-        user_profile = user.profile
+
+        # if user.is_artist:
+        #     user_profile = user.artistprofile_set
+
         # data = UserDetailsTokenSerializer(user_profile, context={"request": self.request}).data
 
         data = {
             "access_token": str(access_token),
             "refresh_token": str(refresh_token),
-            "user": user_profile,
+            # "user": user_profile,
         }
 
         return UserDetailsTokenSerializer(data, context={"request": self.request}).data
