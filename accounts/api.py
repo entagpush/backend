@@ -104,22 +104,62 @@ class UserRegistrationViewSet(viewsets.GenericViewSet, UserTokenResponseMixin):
 
     @action(methods=["put"], detail=False, permission_classes=[IsAuthenticated])
     @swagger_auto_schema(
-        request_body=UserProfileCreateSerializer, responses={200: UserProfileSerializer}
+        request_body=ArtistProfileSerializer, responses={200: ArtistProfileSerializer}
     )
     @transaction.atomic
-    def update_user_profile(self, request, *args, **kwargs):
-        serializer_class = self.get_profile_serializer(request.user)
+    def update_artist_user_profile(self, request, *args, **kwargs):
         user_profile = self.get_user_profile(request.user)
 
         # Update the existing user profile with the new data
-        serializer = serializer_class(
+        serializer = ArtistProfileSerializer(
             instance=user_profile, data=request.data, partial=True
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
         return Response(
-            data=UserProfileSerializer(instance=user_profile).data,
+            data=ArtistProfileSerializer(instance=user_profile).data,
+            status=status.HTTP_200_OK,
+        )
+
+    @action(methods=["put"], detail=False, permission_classes=[IsAuthenticated])
+    @swagger_auto_schema(
+        request_body=CustomerProfileSerializer,
+        responses={200: CustomerProfileSerializer},
+    )
+    @transaction.atomic
+    def update_customer_user_profile(self, request, *args, **kwargs):
+        user_profile = self.get_user_profile(request.user)
+
+        # Update the existing user profile with the new data
+        serializer = CustomerProfileSerializer(
+            instance=user_profile, data=request.data, partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(
+            data=CustomerProfileSerializer(instance=user_profile).data,
+            status=status.HTTP_200_OK,
+        )
+
+    @action(methods=["put"], detail=False, permission_classes=[IsAuthenticated])
+    @swagger_auto_schema(
+        request_body=AdminProfileSerializer, responses={200: AdminProfileSerializer}
+    )
+    @transaction.atomic
+    def update_user_profile(self, request, *args, **kwargs):
+        user_profile = self.get_user_profile(request.user)
+
+        # Update the existing user profile with the new data
+        serializer = AdminProfileSerializer(
+            instance=user_profile, data=request.data, partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(
+            data=AdminProfileSerializer(instance=user_profile).data,
             status=status.HTTP_200_OK,
         )
 
@@ -132,14 +172,6 @@ class UserRegistrationViewSet(viewsets.GenericViewSet, UserTokenResponseMixin):
             return get_object_or_404(ArtistProfile, user=user)
         else:
             raise Exception("Invalid User")
-
-    def get_profile_serializer(user):
-        if user.is_artist:
-            return ArtistProfileSerializer
-        elif user.is_customer:
-            return CustomerProfileSerializer
-        else:
-            return AdminProfileSerializer
 
 
 class AdminInvitationViewSet(viewsets.ModelViewSet):
