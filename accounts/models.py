@@ -110,13 +110,22 @@ class ArtistProfile(UserProfile):
     )
     price_per_service = models.DecimalField(max_digits=10, decimal_places=2)
     stage_name = models.CharField(max_length=100, default="")
+    ranking = models.FloatField(default=0.0)
+    total_rating = models.IntegerField(default=0)  # Sum of all ratings
+    number_of_ratings = models.IntegerField(default=0)  # Number of ratings received
+
+    def __str__(self):
+        return self.user.username
 
     class Meta:
         verbose_name = "Artist Profile"
         verbose_name_plural = "Artist Profiles"
 
-    def __str__(self):
-        return self.user.username
+    def update_ranking(self, new_rating):
+        self.total_rating += new_rating
+        self.number_of_ratings += 1
+        self.ranking = self.total_rating / self.number_of_ratings
+        self.save()
 
 
 # Customer profile model

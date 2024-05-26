@@ -1,17 +1,19 @@
 from django.core.mail import send_mail
+from django.db import transaction
 from django.conf import settings
 
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import ArtistApplication
+
+from customer.models import ArtistApplication
 from .serializers import ArtistApplicationSerializer
 
 User = settings.AUTH_USER_MODEL
 
 
-class ArtistApplicationViewSet(viewsets.ModelViewSet):
+class ArtistApplicationViewSet(viewsets.GenericViewSet):
     queryset = ArtistApplication.objects.all()
     serializer_class = ArtistApplicationSerializer
     permission_classes = [IsAuthenticated]
@@ -45,11 +47,23 @@ class ArtistApplicationViewSet(viewsets.ModelViewSet):
         application.save()
 
         # Send an email notification
-        send_mail(
-            "Artist Application Rejected",
-            f"Sorry {application.name}, your application has been rejected.",
-            "from@example.com",
-            [application.email],
-            fail_silently=False,
-        )
+        # send_mail(
+        #     "Artist Application Rejected",
+        #     f"Sorry {application.name}, your application has been rejected.",
+        #     "from@example.com",
+        #     [application.email],
+        #     fail_silently=False,
+        # )
         return Response({"status": "application rejected"})
+
+    @action(methods=["post"], detail=False, permission_classes=[IsAuthenticated])
+    @transaction.atomic
+    def submit_artist_application(self, request, *args, **kwargs):
+        serializer = ArtistApplicationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(
+            {"message": "Artist application submitted successfully."},
+            status=status.HTTP_201_CREATED,
+        )
