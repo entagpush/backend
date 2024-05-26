@@ -30,11 +30,8 @@ from .serializers import (
     AdminProfileSerializer,
     ArtistProfileSerializer,
     CustomerProfileSerializer,
-    UserDetailsSerializer,
     UserDetailsTokenSerializer,
     UserLoginSerializer,
-    UserProfileCreateSerializer,
-    UserProfileSerializer,
     UserCreateSerializer,
 )
 

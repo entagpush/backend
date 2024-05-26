@@ -61,10 +61,15 @@ class MessageViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Message.objects.none()
+
         user = self.request.user
-        return Message.objects.filter(sender=user) | Message.objects.filter(
-            receiver=user
-        )
+        if user.is_authenticated:
+            return Message.objects.filter(sender=user) | Message.objects.filter(
+                receiver=user
+            )
+        return Message.objects.none()
 
     def perform_create(self, serializer):
         receiver = serializer.validated_data["receiver"]
@@ -85,11 +90,15 @@ class GigViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Gig.objects.none()
+
         user = self.request.user
-        if user.is_customer:
-            return Gig.objects.filter(customer=user)
-        elif user.is_artist:
-            return Gig.objects.filter(artist__user=user)
+        if user.is_authenticated:
+            if user.is_customer:
+                return Gig.objects.filter(customer=user)
+            elif user.is_artist:
+                return Gig.objects.filter(artist__user=user)
         return Gig.objects.none()
 
     def perform_create(self, serializer):

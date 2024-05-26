@@ -70,49 +70,49 @@ class UserCreateSerializer(serializers.ModelSerializer):
             )
 
 
-class UserDetailsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ["id", "email", "username", "is_admin", "date_joined", "is_staff"]
+# class UserDetailsSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = User
+#         fields = ["id", "email", "username", "is_admin", "date_joined", "is_staff"]
 
 
-class UserProfileSerializer(serializers.ModelSerializer):
-    user = UserDetailsSerializer(read_only=True)
+# class UserProfileSerializer(serializers.ModelSerializer):
+#     user = UserDetailsSerializer(read_only=True)
 
-    class Meta:
-        model = UserProfile
-        fields = [
-            "id",
-            "user",
-            "first_name",
-            "last_name",
-            "bio",
-            "phone_number",
-            "is_artist",
-            "profile_picture",
-        ]
+#     class Meta:
+#         model = UserProfile
+#         fields = [
+#             "id",
+#             "user",
+#             "first_name",
+#             "last_name",
+#             "bio",
+#             "phone_number",
+#             "is_artist",
+#             "profile_picture",
+#         ]
 
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        return representation
+#     def to_representation(self, instance):
+#         representation = super().to_representation(instance)
+#         return representation
 
 
-class UserProfileCreateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserProfile
-        fields = [
-            "user",
-            "first_name",
-            "last_name",
-            "bio",
-            "phone_number",
-            "is_artist",
-        ]
+# class UserProfileCreateSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = UserProfile
+#         fields = [
+#             "user",
+#             "first_name",
+#             "last_name",
+#             "bio",
+#             "phone_number",
+#             "is_artist",
+#         ]
 
-        read_only_fields = ("user",)
+#         read_only_fields = ("user",)
 
-    def to_representation(self, instance):
-        return UserProfileSerializer(instance=instance)
+#     def to_representation(self, instance):
+#         return UserProfileSerializer(instance=instance)
 
 
 class ArtistProfileSerializer(serializers.ModelSerializer):
@@ -136,7 +136,7 @@ class AdminProfileSerializer(serializers.ModelSerializer):
 class UserDetailsTokenSerializer(serializers.Serializer):
     access_token = serializers.CharField()
     refresh_token = serializers.CharField()
-    user = UserProfileSerializer()
+    # user = UserProfileSerializer()
 
 
 class UserLoginSerializer(serializers.Serializer):
