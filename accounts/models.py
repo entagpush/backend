@@ -9,59 +9,9 @@ from django.utils.crypto import get_random_string
 from core.models import TimestampedModel, storage_location
 
 
-# User = settings.AUTH_USER_MODEL
-
-# class UserProfile(TimestampedModel):
-#     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
-#     first_name = models.CharField(max_length=100, default="")
-#     last_name = models.CharField(max_length=100, default="")
-
-#     # Additional fields
-#     is_artist = models.BooleanField(default=False)
-#     bio = models.TextField(blank=True)
-#     profile_picture = models.FileField(
-#         storage=storage_location,
-#         upload_to="user_profile_picture/",
-#         null=True,
-#         blank=True,
-#     )
-#     phone_number = models.CharField(max_length=20, blank=True)
-
-#     def __str__(self):
-#         return self.user.username
-
-
 class UserManager(BaseUserManager):
 
     use_in_migration = True
-
-    # def _create_user(self, email, password, username_data, **extra_fields):
-    #     if not email:
-    #         raise ValueError("The given email must be set")
-    #     if not username_data:
-    #         raise ValueError("The given username must be set")
-
-    #     username_normalised = self.model.normalize_username(username_data)
-
-    #     user = self.model(username=username_normalised, email=email, **extra_fields)
-    #     user.save(using=self._db)
-
-    #     user.set_password(password)
-    #     user.save(using=self._db)
-
-    #     return user
-
-    # def _create_user_profile(self, user):
-    #     return UserProfile.objects.create(user=user)
-
-    # def create_user(self, email, password=None, **extra_fields):
-    #     with transaction.atomic():
-    #         extra_fields.setdefault("is_superuser", False)
-
-    #         user = self._create_user(email, password, **extra_fields)
-    #         print("I got here")
-    #         self._create_user_profile(user)
-    #         return user
 
     def create_superuser(self, email, password, **extra_fields):
         extra_fields.setdefault("is_staff", True)
@@ -86,6 +36,9 @@ class User(AbstractUser):
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
 
+    is_artist = models.BooleanField(default=False)
+    is_customer = models.BooleanField(default=False)
+
     objects = UserManager()
 
     USERNAME_FIELD = "username"
@@ -95,17 +48,11 @@ class User(AbstractUser):
         return self.username
 
 
-class ArtistData(TimestampedModel):
-    genres = models.CharField(max_length=256)
-
-
 class UserProfile(TimestampedModel):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     first_name = models.CharField(max_length=100, default="")
     last_name = models.CharField(max_length=100, default="")
-
-    # Additional fields
-    is_artist = models.BooleanField(default=False)
+    gender = models.CharField(max_length=100, default="")
     bio = models.TextField(blank=True)
     profile_picture = models.FileField(
         storage=storage_location,
@@ -114,39 +61,16 @@ class UserProfile(TimestampedModel):
         blank=True,
     )
     phone_number = models.CharField(max_length=20, blank=True)
-    genres = models.ForeignKey(
-        ArtistData,
-        on_delete=models.CASCADE,
-        blank=True,
-        null=True,
-    )
+
+    class Meta:
+        abstract = True
 
     def __str__(self):
         return self.user.username
 
 
-# class EmailAddress(models.Model):
-#     uuid = models.UUIDField(unique=True, default=uuid_lib.uuid4)
-#     user = models.ForeignKey(
-#         settings.AUTH_USER_MODEL,
-#         related_name="email_addresses",
-#         on_delete=models.CASCADE,
-#     )
-#     email = models.EmailField(unique=True)
-#     is_verified = models.BooleanField(default=False)
-#     is_primary = models.BooleanField(default=False)
-#     created_at = models.DateTimeField(auto_now_add=True)
-
-#     def __str__(self):
-#         return self.email
-
-#     def confirm(self):
-#         self.is_verified = True
-#         self.save(update_fields=["is_verified"])
-#         self.user.save()
-
-
-class AdminInvitation(models.Model):
+# Admin invitation model
+class AdminInvitation(TimestampedModel):
     email = models.EmailField()
     code = models.CharField(max_length=20, unique=True, blank=True)
     inviter = models.ForeignKey(
@@ -164,6 +88,7 @@ class AdminInvitation(models.Model):
         return f"Invitation for {self.email} by {self.inviter.username} (Accepted: {'Yes' if self.accepted else 'No'})"
 
 
+# Genre model
 class Genre(TimestampedModel):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
@@ -172,18 +97,50 @@ class Genre(TimestampedModel):
         return self.name
 
 
-class ArtistProfile(TimestampedModel):
-    profile = models.OneToOneField(
-        UserProfile, on_delete=models.CASCADE, related_name="artist_profile"
-    )
-    genres = models.ManyToManyField(Genre, related_name="artists")
+# Artist data model
+class ArtistData(TimestampedModel):
+    genres = models.CharField(max_length=256)
+
+
+# Artist profile model
+class ArtistProfile(UserProfile):
+    genres = models.ManyToManyField(Genre, related_name="artist_profile")
     samples = models.FileField(
         storage=storage_location, upload_to="samples/", null=True, blank=True
     )
     price_per_service = models.DecimalField(max_digits=10, decimal_places=2)
+    stage_name = models.CharField(max_length=100, default="")
+
+    class Meta:
+        verbose_name = "Artist Profile"
+        verbose_name_plural = "Artist Profiles"
 
     def __str__(self):
-        return self.profile.user.username
+        return self.user.username
+
+
+# Customer profile model
+class CustomerProfile(UserProfile):
+    favorite_genres = models.ManyToManyField(Genre, related_name="customer_profile")
+
+    class Meta:
+        verbose_name = "Customer Profile"
+        verbose_name_plural = "Customer Profiles"
+
+    def __str__(self):
+        return self.user.username
+
+
+# Admin profile model
+class AdminProfile(UserProfile):
+    admin_notes = models.TextField(blank=True)
+
+    class Meta:
+        verbose_name = "Admin Profile"
+        verbose_name_plural = "Admin Profiles"
+
+    def __str__(self):
+        return self.user.username
 
 
 # class Message(TimestampedModel):

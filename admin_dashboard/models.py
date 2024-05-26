@@ -39,25 +39,3 @@ class Dispute(TimestampedModel):
 
     def __str__(self):
         return f"Dispute by {self.raised_by.username} against {self.against.username} - {self.status}"
-
-
-# class TimestampedModel(models.Model):
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     updated_at = models.DateTimeField(auto_now=True)
-#     created_by = models.ForeignKey(
-#         User,
-#         null=True,
-#         blank=True,
-#         related_name="%(class)s_created",
-#         on_delete=models.SET_NULL,
-#     )
-#     updated_by = models.ForeignKey(
-#         User,
-#         null=True,
-#         blank=True,
-#         related_name="%(class)s_updated",
-#         on_delete=models.SET_NULL,
-#     )
-
-#     class Meta:
-#         abstract = True

@@ -17,10 +17,19 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from drf_yasg.utils import swagger_auto_schema
 
-from accounts.models import AdminInvitation, UserProfile
+from accounts.models import (
+    AdminInvitation,
+    AdminProfile,
+    ArtistProfile,
+    CustomerProfile,
+    UserProfile,
+)
 
 from .serializers import (
     AdminInvitationSerializer,
+    AdminProfileSerializer,
+    ArtistProfileSerializer,
+    CustomerProfileSerializer,
     UserDetailsSerializer,
     UserDetailsTokenSerializer,
     UserLoginSerializer,
@@ -99,10 +108,11 @@ class UserRegistrationViewSet(viewsets.GenericViewSet, UserTokenResponseMixin):
     )
     @transaction.atomic
     def update_user_profile(self, request, *args, **kwargs):
+        serializer_class = self.get_profile_serializer(request.user)
         user_profile = self.get_user_profile(request.user)
 
         # Update the existing user profile with the new data
-        serializer = UserProfileCreateSerializer(
+        serializer = serializer_class(
             instance=user_profile, data=request.data, partial=True
         )
         serializer.is_valid(raise_exception=True)
@@ -114,7 +124,22 @@ class UserRegistrationViewSet(viewsets.GenericViewSet, UserTokenResponseMixin):
         )
 
     def get_user_profile(self, user):
-        return get_object_or_404(UserProfile, user=user)
+        if user.is_admin:
+            return get_object_or_404(AdminProfile, user=user)
+        elif user.is_customer:
+            return get_object_or_404(CustomerProfile, user=user)
+        elif user.is_artist:
+            return get_object_or_404(ArtistProfile, user=user)
+        else:
+            raise Exception("Invalid User")
+
+    def get_profile_serializer(user):
+        if user.is_artist:
+            return ArtistProfileSerializer
+        elif user.is_customer:
+            return CustomerProfileSerializer
+        else:
+            return AdminProfileSerializer
 
 
 class AdminInvitationViewSet(viewsets.ModelViewSet):

@@ -277,6 +277,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # CSRF_COOKIE_SECURE = True
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:8000",
+    "http://localhost:6100",
     "https://waitlist-khaki.vercel.app/",
     "https://backend-yxi1.onrender.com/swagger/",
 ]

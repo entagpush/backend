@@ -4,7 +4,14 @@ from django.db import transaction
 
 from rest_framework import serializers
 
-from accounts.models import User, AdminInvitation, UserProfile
+from accounts.models import (
+    AdminProfile,
+    ArtistProfile,
+    CustomerProfile,
+    User,
+    AdminInvitation,
+    UserProfile,
+)
 from accounts.services import send_admin_invitation_email
 
 
@@ -22,6 +29,8 @@ class UserCreateSerializer(serializers.ModelSerializer):
             "username",
             "password",
             "is_admin",
+            "is_artist",
+            "is_customer",
         ]
 
     def create(self, validated_data):
@@ -43,13 +52,22 @@ class UserCreateSerializer(serializers.ModelSerializer):
             user.set_password(password)
             user.save()
 
-            self.create_user_profile(user)
+            self.create_user_profile(user, validated_data)
 
         return user
 
     @staticmethod
-    def create_user_profile(user):
-        UserProfile.objects.create(user=user)
+    def create_user_profile(user, validated_data):
+        if user.is_artist:
+            ArtistProfile.objects.create(user=user)
+        elif user.is_customer:
+            CustomerProfile.objects.create(user=user)
+        elif user.is_admin:
+            AdminProfile.objects.create(user=user)
+        else:
+            return serializers.ValidationError(
+                detail="Provided user type is invalid", code=400
+            )
 
 
 class UserDetailsSerializer(serializers.ModelSerializer):
@@ -95,6 +113,24 @@ class UserProfileCreateSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         return UserProfileSerializer(instance=instance)
+
+
+class ArtistProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ArtistProfile
+        fields = "__all__"
+
+
+class CustomerProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomerProfile
+        fields = "__all__"
+
+
+class AdminProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AdminProfile
+        fields = "__all__"
 
 
 class UserDetailsTokenSerializer(serializers.Serializer):

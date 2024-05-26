@@ -1,3 +1,4 @@
+from django.core.mail import send_mail
 from django.db import models
 from django.conf import settings
 
@@ -36,18 +37,23 @@ class ArtistApplication(TimestampedModel):
     def __str__(self):
         return f"{self.name} - {self.status}"
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.status == "pending":
+            self.notify_admin()
 
-class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    is_artist = models.BooleanField(default=False)
-    bio = models.TextField(blank=True, null=True)
-    genres = models.CharField(max_length=255, blank=True, null=True)
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return self.user.username
+    def notify_admin(self):
+        send_mail(
+            "New Artist Application Submitted",
+            f"Artist {self.name} has submitted an application.",
+            "from@example.com",
+            ["admin@example.com"],
+            fail_silently=False,
+        )
 
 
-from customer.signals import application_notification
+class ClientGig(models.Model):
+    pass
+
+
+# from customer.signals import application_notification
