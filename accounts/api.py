@@ -102,7 +102,7 @@ class UserRegistrationViewSet(viewsets.GenericViewSet, UserTokenResponseMixin):
         data = self.get_user_token_response_data(user)
         return Response(data)
 
-    @action(methods=["patch"], detail=False, permission_classes=[IsAuthenticated])
+    @action(methods=["put"], detail=False, permission_classes=[IsAuthenticated])
     @swagger_auto_schema(
         request_body=UserProfileCreateSerializer, responses={200: UserProfileSerializer}
     )
