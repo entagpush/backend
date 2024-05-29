@@ -108,7 +108,9 @@ class ArtistProfile(UserProfile):
     samples = models.FileField(
         storage=storage_location, upload_to="samples/", null=True, blank=True
     )
-    price_per_service = models.DecimalField(max_digits=10, decimal_places=2)
+    price_per_service = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0.0, null=True
+    )
     stage_name = models.CharField(max_length=100, default="")
     ranking = models.FloatField(default=0.0)
     total_rating = models.IntegerField(default=0)  # Sum of all ratings

@@ -18,6 +18,19 @@ from accounts.services import send_admin_invitation_email
 INVALID_CREDENTIALS_MSG = "Unable to login with the provided credentials."
 
 
+class UserDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "email",
+            "username",
+            "is_admin",
+            "is_artist",
+            "is_customer",
+        ]
+
+
 class UserCreateSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
 
@@ -136,7 +149,7 @@ class AdminProfileSerializer(serializers.ModelSerializer):
 class UserDetailsTokenSerializer(serializers.Serializer):
     access_token = serializers.CharField()
     refresh_token = serializers.CharField()
-    # user = UserProfileSerializer()
+    user = UserDetailSerializer()
 
 
 class UserLoginSerializer(serializers.Serializer):

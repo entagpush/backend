@@ -52,7 +52,7 @@ class UserTokenResponseMixin:
         data = {
             "access_token": str(access_token),
             "refresh_token": str(refresh_token),
-            # "user": user_profile,
+            "user": user,
         }
 
         return UserDetailsTokenSerializer(data, context={"request": self.request}).data
