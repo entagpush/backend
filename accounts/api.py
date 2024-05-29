@@ -22,7 +22,6 @@ from accounts.models import (
     AdminProfile,
     ArtistProfile,
     CustomerProfile,
-    UserProfile,
 )
 
 from .serializers import (
