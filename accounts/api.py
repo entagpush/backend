@@ -99,6 +99,11 @@ class UserRegistrationViewSet(viewsets.GenericViewSet, UserTokenResponseMixin):
 
         user = serializer.save()
         data = self.get_user_token_response_data(user)
+
+        data["is_artist"] = user.is_artist
+        data["is_admin"] = user.is_admin
+        data["is_customer"] = user.is_customer
+
         return Response(data)
 
     @action(methods=["put"], detail=False, permission_classes=[IsAuthenticated])

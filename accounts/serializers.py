@@ -171,7 +171,7 @@ class UserLoginSerializer(serializers.Serializer):
             )
         return user
 
-    def save(self):
+    def save(self) -> User:
         request = self.context.get("request")
         user = self.authenticate_user(request, **self.validated_data)
 
