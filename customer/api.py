@@ -103,3 +103,35 @@ class GigViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(customer=self.request.user)
+
+    @action(
+        detail=True,
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+    )
+    def accept_gig(self, request, pk=None):
+        gig = self.get_object()
+        if request.user != gig.artist.user:
+            return Response(
+                {"error": "You are not allowed to accept this gig."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        gig.status = "accepted"
+        gig.save()
+        return Response({"status": "Gig accepted."}, status=status.HTTP_200_OK)
+
+    @action(
+        detail=True,
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+    )
+    def reject_gig(self, request, pk=None):
+        gig = self.get_object()
+        if request.user != gig.artist.user:
+            return Response(
+                {"error": "You are not allowed to reject this gig."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        gig.status = "rejected"
+        gig.save()
+        return Response({"status": "Gig rejected."}, status=status.HTTP_200_OK)

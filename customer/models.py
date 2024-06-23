@@ -53,6 +53,12 @@ class ArtistApplication(TimestampedModel):
 
 
 class Gig(TimestampedModel):
+    STATUS_CHOICES = (
+        ("pending", "Pending"),
+        ("accepted", "Accepted"),
+        ("rejected", "Rejected"),
+    )
+
     customer = models.ForeignKey(User, on_delete=models.CASCADE, related_name="gigs")
     artist = models.ForeignKey(
         ArtistProfile, on_delete=models.CASCADE, related_name="gigs"
@@ -60,9 +66,7 @@ class Gig(TimestampedModel):
     description = models.TextField()
     date = models.DateField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    status = models.CharField(
-        max_length=20, default="pending"
-    )  # e.g., pending, confirmed, completed
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
 
     def __str__(self):
         return f"Gig for {self.artist.user.username} by {self.customer.username} on {self.date}"

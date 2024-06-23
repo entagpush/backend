@@ -1,8 +1,25 @@
 from rest_framework import serializers
+
+from accounts.models import CustomerProfile
 from .models import ArtistReview, Gig, Message
 
 
+class GigCustomerSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = CustomerProfile
+        fields = [
+            "id",
+            "first_name",
+            "last_name",
+            "phone_number",
+            "user",
+        ]
+
+
 class GigSerializer(serializers.ModelSerializer):
+    customer = GigCustomerSerializer(read_only=True)
+
     class Meta:
         model = Gig
         fields = [
