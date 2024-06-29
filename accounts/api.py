@@ -23,6 +23,7 @@ from accounts.models import (
     ArtistProfile,
     CustomerProfile,
 )
+from core.exceptions import InvalidUserTypeError
 
 from .serializers import (
     AdminInvitationSerializer,
@@ -61,6 +62,17 @@ class UserRegistrationViewSet(viewsets.GenericViewSet, UserTokenResponseMixin):
     queryset = User.objects.all()
     serializer_class = UserCreateSerializer
     permission_classes = [AllowAny]
+
+    def get_serializer_class(self):
+        user = self.request.user
+        if user.is_artist:
+            return ArtistProfileSerializer
+        elif user.is_customer:
+            return CustomerProfileSerializer
+        elif user.is_admin:
+            return AdminProfileSerializer
+
+        raise InvalidUserTypeError()
 
     @csrf_exempt
     @action(methods=["post"], detail=False)
@@ -167,6 +179,14 @@ class UserRegistrationViewSet(viewsets.GenericViewSet, UserTokenResponseMixin):
             status=status.HTTP_200_OK,
         )
 
+    @action(methods=["get"], detail=False, permission_classes=[IsAuthenticated])
+    def get_user_profile(self, request, *args, **kwargs):
+        user_profile = self.get_user_profile_instance(request.user)
+        serializer_class = self.get_serializer_class()
+        serializer = serializer_class(instance=user_profile)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
     def get_user_profile(self, user):
         if user.is_admin:
             return get_object_or_404(AdminProfile, user=user)
@@ -175,7 +195,7 @@ class UserRegistrationViewSet(viewsets.GenericViewSet, UserTokenResponseMixin):
         elif user.is_artist:
             return get_object_or_404(ArtistProfile, user=user)
         else:
-            raise Exception("Invalid User")
+            raise InvalidUserTypeError
 
 
 class AdminInvitationViewSet(viewsets.ModelViewSet):
