@@ -1,3 +1,4 @@
+from rest_framework.exceptions import ValidationError
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -7,9 +8,12 @@ from accounts.serializers import ArtistProfileSerializer
 from customer.models import Gig, Message
 from customer.serializers import (
     ArtistReviewSerializer,
+    CounterOfferMessageSerializer,
     GigSerializer,
     MessageSerializer,
+    RejectGigSerializer,
 )
+from customer.utils import create_message
 
 
 class ArtistViewSet(viewsets.ReadOnlyModelViewSet):
@@ -22,17 +26,6 @@ class CustomerViewSet(viewsets.GenericViewSet):
     queryset = ArtistProfile.objects.filter(user__is_active=True, user__is_artist=True)
     serializer_class = ArtistProfileSerializer
     permission_classes = [permissions.IsAuthenticated]
-
-    # @action(
-    #     detail=True, methods=["post"], permission_classes=[permissions.IsAuthenticated]
-    # )
-    # def create_gig(self, request, pk=None):
-    #     artist = self.get_object()
-    #     serializer = GigSerializer(data=request.data, context={"request": request})
-    #     if serializer.is_valid():
-    #         serializer.save(artist=artist)
-    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
@@ -77,9 +70,8 @@ class MessageViewSet(viewsets.ModelViewSet):
             (self.request.user.is_artist and receiver.is_customer)
             or (self.request.user.is_customer and receiver.is_artist)
         ):
-            return Response(
-                {"error": "Messages can only be sent between artists and customers."},
-                status=status.HTTP_400_BAD_REQUEST,
+            raise ValidationError(
+                {"error": "Messages can only be sent between artists and customers."}
             )
         serializer.save(sender=self.request.user)
 
@@ -94,11 +86,13 @@ class GigViewSet(viewsets.ModelViewSet):
             return Gig.objects.none()
 
         user = self.request.user
+
         if user.is_authenticated:
             if user.is_customer:
                 return Gig.objects.filter(customer=user)
             elif user.is_artist:
                 return Gig.objects.filter(artist__user=user)
+
         return Gig.objects.none()
 
     def perform_create(self, serializer):
@@ -110,7 +104,7 @@ class GigViewSet(viewsets.ModelViewSet):
         permission_classes=[permissions.IsAuthenticated],
     )
     def accept_gig(self, request, pk=None):
-        gig = self.get_object()
+        gig: Gig = self.get_object()
         if request.user != gig.artist.user:
             return Response(
                 {"error": "You are not allowed to accept this gig."},
@@ -126,12 +120,47 @@ class GigViewSet(viewsets.ModelViewSet):
         permission_classes=[permissions.IsAuthenticated],
     )
     def reject_gig(self, request, pk=None):
-        gig = self.get_object()
+        serializer = RejectGigSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        gig: Gig = self.get_object()
         if request.user != gig.artist.user:
             return Response(
                 {"error": "You are not allowed to reject this gig."},
                 status=status.HTTP_403_FORBIDDEN,
             )
+
         gig.status = "rejected"
+        gig.reason_for_rejection = serializer.validated_data["reason"]
+
         gig.save()
         return Response({"status": "Gig rejected."}, status=status.HTTP_200_OK)
+
+    @action(
+        detail=True,
+        methods=["post"],
+        permission_classes=[permissions.IsAuthenticated],
+    )
+    def start_counter_offer(self, request, pk=None):
+        gig = self.get_object()
+
+        counter_offer_message = CounterOfferMessageSerializer(data=request.data)
+        counter_offer_message.is_valid(raise_exception=True)
+
+        if request.user != gig.customer.user:
+            return Response(
+                {"error": "You are not allowed to start a counter offer."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        gig.status = "counter_offer"
+        gig.save()
+
+        create_message(
+            sender=gig.artist.user,
+            receiver=gig.customer.user,
+            content=counter_offer_message.data["content"],
+            is_counter_offer=True,
+            gig=gig,
+        )
+
+        return Response({"status": "Counter offer started."}, status=status.HTTP_200_OK)

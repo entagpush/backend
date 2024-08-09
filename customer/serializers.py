@@ -60,13 +60,37 @@ class ArtistReviewSerializer(serializers.ModelSerializer):
 
 
 class MessageSerializer(serializers.ModelSerializer):
+    gig = serializers.SerializerMethodField()
+
     class Meta:
         model = Message
-        fields = ["id", "sender", "receiver", "content", "timestamp", "is_read"]
+        fields = [
+            "id",
+            "sender",
+            "receiver",
+            "content",
+            "timestamp",
+            "is_read",
+            "is_counter_offer",
+            "gig",
+        ]
         read_only_fields = ["sender", "timestamp", "is_read"]
+
+    def get_gig(self, obj):
+        if obj.gig:
+            return GigSerializer(obj.gig).data
+        return None
 
     def create(self, validated_data):
         request = self.context.get("request", None)
         if request:
             validated_data["sender"] = request.user
         return super().create(validated_data)
+
+
+class CounterOfferMessageSerializer(serializers.Serializer):
+    content = serializers.CharField()
+
+
+class RejectGigSerializer(serializers.Serializer):
+    reason = serializers.CharField()

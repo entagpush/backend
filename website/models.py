@@ -1,20 +1,18 @@
 from django.db import models
 from django.utils import timezone
-from core.models import TimestampedModel, storage_location
+
+from cloudinary.models import CloudinaryField
+
+from core.models import TimestampedModel
 
 
 # Create your models here.
 
 
-class Blog(models.Model):
+class Blog(TimestampedModel):
     title = models.CharField(max_length=100)
     content = models.TextField()
-    image = models.FileField(
-        storage=storage_location,
-        upload_to="blog_images/",
-        null=True,
-        blank=True,
-    )
+    image = CloudinaryField("image", null=True, blank=True)  # Updated to use Cloudinary
     is_anonymous = models.BooleanField(default=True)
     co_author = models.CharField(max_length=256, default="", blank=True)
     author = models.ForeignKey(

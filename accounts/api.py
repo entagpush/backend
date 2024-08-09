@@ -22,8 +22,10 @@ from accounts.models import (
     AdminProfile,
     ArtistProfile,
     CustomerProfile,
+    UserVerificationRequest,
 )
 from core.exceptions import InvalidUserTypeError
+from core.utils import encrypt_for_db
 
 from .serializers import (
     AdminInvitationSerializer,
@@ -31,6 +33,7 @@ from .serializers import (
     ArtistProfileSerializer,
     CustomerProfileSerializer,
     UserDetailsTokenSerializer,
+    CollectUserKYCDetailSerializer,
     UserLoginSerializer,
     UserCreateSerializer,
 )
@@ -196,6 +199,36 @@ class UserRegistrationViewSet(viewsets.GenericViewSet, UserTokenResponseMixin):
             return get_object_or_404(ArtistProfile, user=user)
         else:
             raise InvalidUserTypeError
+
+    @action(methods=["post"], detail=True, permission_classes=[IsAuthenticated])
+    @swagger_auto_schema(
+        request_body=CollectUserKYCDetailSerializer,
+        responses={200: AdminProfileSerializer},
+    )
+    def update_user_kyc(self, request, *args, **kwargs):
+        serializer = CollectUserKYCDetailSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        data = serializer.validated_data
+
+        bvn_data = data.pop("bvn")
+        nin_data = data.pop("nin")
+
+        user = self.get_object()
+
+        bvn = encrypt_for_db(bvn_data)
+        nin = encrypt_for_db(nin_data)
+
+        # TODO: set up digital verification using a service like
+        # QOREID after collection verification data
+        UserVerificationRequest.objects.create(
+            user=user,
+            bvn=bvn,
+            nin=nin,
+            **data,
+        )
+
+        return Response("Verification request received")
 
 
 class AdminInvitationViewSet(viewsets.ModelViewSet):

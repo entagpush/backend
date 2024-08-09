@@ -1,8 +1,9 @@
 from django.db import models
 from django.conf import settings
 
+from cloudinary.models import CloudinaryField
 
-from core.models import TimestampedModel, storage_location
+from core.models import TimestampedModel
 
 """
 to access history records ===
@@ -31,9 +32,7 @@ class Dispute(TimestampedModel):
     description = models.TextField()
     status = models.CharField(max_length=8, choices=STATUS_CHOICES, default="open")
     resolution = models.TextField(blank=True, null=True)
-    proof = models.FileField(
-        storage=storage_location, upload_to="proof/", null=True, blank=True
-    )
+    proof = CloudinaryField("file", null=True, blank=True)
 
     # created_at = models.DateTimeField(auto_now_add=True)
 

@@ -11,6 +11,7 @@ from accounts.models import (
     User,
     AdminInvitation,
     UserProfile,
+    UserVerificationRequest,
 )
 from accounts.services import send_admin_invitation_email
 
@@ -194,3 +195,16 @@ class AdminInvitationSerializer(serializers.ModelSerializer):
         # Send email to the invitee with the invitation code/link
         send_admin_invitation_email(invitation)
         return invitation
+
+
+class CollectUserKYCDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserVerificationRequest
+        fields = [
+            "bvn",
+            "nin",
+            "first_name",
+            "last_name",
+            "phone_number",
+            "date_of_birth",
+        ]

@@ -5,8 +5,9 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.conf import settings
 from django.utils.crypto import get_random_string
 
+from cloudinary.models import CloudinaryField
 
-from core.models import TimestampedModel, storage_location
+from core.models import TimestampedModel
 
 
 class UserManager(BaseUserManager):
@@ -54,12 +55,9 @@ class UserProfile(TimestampedModel):
     last_name = models.CharField(max_length=100, default="")
     gender = models.CharField(max_length=100, default="")
     bio = models.TextField(blank=True)
-    profile_picture = models.FileField(
-        storage=storage_location,
-        upload_to="user_profile_picture/",
-        null=True,
-        blank=True,
-    )
+    profile_picture = CloudinaryField(
+        "image", null=True, blank=True
+    )  # Updated to use Cloudinary
     phone_number = models.CharField(max_length=20, blank=True)
 
     class Meta:
@@ -105,16 +103,15 @@ class ArtistData(TimestampedModel):
 # Artist profile model
 class ArtistProfile(UserProfile):
     genres = models.ManyToManyField(Genre, related_name="artist_profile")
-    samples = models.FileField(
-        storage=storage_location, upload_to="samples/", null=True, blank=True
-    )
+    samples = CloudinaryField(
+        "file", null=True, blank=True
+    )  # Updated to use Cloudinary
 
     price_per_service = models.DecimalField(
         max_digits=10, decimal_places=2, default=0.0, null=True
     )
 
     skilled_profession = models.CharField(max_length=256, default="")
-
     stage_name = models.CharField(max_length=100, default="")
     ranking = models.FloatField(default=0.0)
     total_rating = models.IntegerField(default=0)  # Sum of all ratings
@@ -156,6 +153,32 @@ class AdminProfile(UserProfile):
 
     def __str__(self):
         return self.user.username
+
+
+class VerificationStatusChoices(models.TextChoices):
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+
+
+class UserVerificationRequest(TimestampedModel):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    bvn = models.CharField(max_length=12, default="")
+    nin = models.CharField(max_length=12, default="")
+    first_name = models.CharField(max_length=100, default="")
+    last_name = models.CharField(max_length=100, default="")
+    phone_number = models.CharField(max_length=20, default="")
+    date_of_birth = models.DateField(null=True)
+    status = models.CharField(
+        max_length=20,
+        choices=VerificationStatusChoices.choices,
+        default="pending",
+    )
+
+    def __str__(self):
+        return self.user.username
+
+    # document_img = models image field here.
 
 
 # class Message(TimestampedModel):

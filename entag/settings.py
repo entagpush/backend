@@ -32,6 +32,11 @@ SECRET_KEY = config(
     default="django-insecure-@68&po=$xem0nz1e(b)=38pdixp2k6_6cebbt!qaye_lec(!oa",
 )
 
+PUBLIC_KEY = config(
+    "PUBLIC_KEY",
+    default="django-bad_guy-bajebaje-@68&po=$xem0nz198gbygiosnioh$%^&*vnw0395e8u4tbvp2k6_6cebbt!qaye_lec(!oa",
+)
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG", default=True, cast=bool)
 
@@ -63,6 +68,9 @@ INSTALLED_APPS = [
     "corsheaders",
     "django_filters",
     "simple_history",
+    # "storages",
+    "cloudinary",
+    "cloudinary_storage",
     # "allauth",
     # "allauth.account",
     # "allauth.socialaccount",
@@ -265,6 +273,18 @@ AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
 AWS_S3_OBJECT_PARAMETERS = {"CacheControl": "max-age=86400"}
 AWS_DEFAULT_ACL = "public-read"
 AWS_LOCATION = "static"
+
+
+CLOUDINARY_STORAGE = {
+    "CLOUD_NAME": "your-cloud-name",
+    "API_KEY": "your-api-key",
+    "API_SECRET": "your-api-secret",
+}
+
+DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_LOCATION}/"
 # STATICFILES_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
